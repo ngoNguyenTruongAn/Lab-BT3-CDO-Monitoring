@@ -83,10 +83,16 @@ resource "aws_instance" "lab" {
   vpc_security_group_ids      = [aws_security_group.ec2.id]
   associate_public_ip_address = var.associate_public_ip_address
   monitoring                  = true
+  iam_instance_profile        = aws_iam_instance_profile.ec2_cloudwatch_profile.name
   user_data                   = <<-EOF
     #!/bin/bash
+    # Create CPU load
     nohup bash -c 'while true; do :; done' >/dev/null 2>&1 &
     nohup bash -c 'while true; do :; done' >/dev/null 2>&1 &
+    
+    # Install CloudWatch Agent
+    dnf install amazon-cloudwatch-agent -y
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c default
   EOF
 
   tags = {
